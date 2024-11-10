@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: webapp-controller
+spec:
+  replicas: 2
+  selector:
+    app: my-app
+  template:
+    metadata:
+      labels:
+        app: my-app
+    spec:
+      containers:
+        - name: my-app-container
+          image: sp8049/flask-app:latest # Replace with your Docker image
+          ports:
+            - containerPort: 5000 # Replace with your container's port if different

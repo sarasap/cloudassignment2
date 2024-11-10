@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webapp-deployment
+  labels:
+    app: webapp
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: webapp
+  template:
+    metadata:
+      labels:
+        app: webapp
+    spec:
+      containers:
+        - name: webapp-container
+          image: ojasva22/flask-app:v3
+          ports:
+            - containerPort: 5000
+          env:
+            - name: MONGO_HOST
+              value: "mongodb"
+            - name: MONGO_PORT
+              value: "27017"
+          livenessProbe:
+            httpGet:
+              path: /healthz # Liveness endpoint
+              port: 5000
+            initialDelaySeconds: 10 # Delay before the first liveness check
+            periodSeconds: 15 # Check every 15 seconds
+            failureThreshold: 3 # Restart pod after 3 failed checks
+          readinessProbe:
+            httpGet:
+              path: /ready # Readiness endpoint
+              port: 5000
+            initialDelaySeconds: 5 # Delay before the first readiness check
+            periodSeconds: 10 # Check every 10 seconds
+            failureThreshold: 3 # Mark pod as unready after 3 failed checks
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: webapp-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: webapp
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 5000
